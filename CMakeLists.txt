@@ -8,6 +8,8 @@ source/utility/LUtil.cpp
 source/utility/CLFile.cpp 
 source/multiThreading/ILThread.cpp 
 source/dataStructure/CLBuffer.cpp
+source/dataStructure/CLLinkedList.cpp
+source/dataStructure/CLListElement.cpp
 )
 # Protobuf 및 gRPC 라이브러리 찾기
 
