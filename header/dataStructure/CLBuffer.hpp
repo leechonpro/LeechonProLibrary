@@ -7,6 +7,9 @@ namespace LPL
 class CLBuffer
 {
 public:
+    CLBuffer();
+    CLBuffer(const CLBuffer&) = delete;
+    ~CLBuffer();
 // Push back
     CLBuffer& operator<<( const uint8_t aInput );
     CLBuffer& operator<<( const uint16_t aInput );
@@ -28,9 +31,7 @@ public:
     void Reset();
     bool IsEmpty();
 protected:
-    std::vector<size_t> m_sizeVec;
     std::vector<uint8_t> m_dataVec;
-    size_t m_sizeIndex;
     size_t m_dataIndex;
 };
 
