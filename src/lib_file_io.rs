@@ -33,9 +33,9 @@ impl FileIO {
     {
         match &self.file
         {
-            Some(file) =>
+            Some(_) =>
             {
-                drop( file );
+                
                 self.file = None;
             },
             None =>
@@ -55,7 +55,7 @@ impl FileIO {
             },
             None=>
             {
-                let mut file = OpenOptions::new()
+                let file = OpenOptions::new()
                     .write(true)
                     .append(true)
                     .open(&self.file_path);
@@ -82,7 +82,7 @@ impl FileIO {
             },
             None=>
             {
-                let mut file = OpenOptions::new()
+                let file = OpenOptions::new()
                 .write(true)
                 .create(true)
                 .truncate(true)
@@ -108,7 +108,7 @@ impl FileIO {
         {
             Some( ref mut file ) =>
             {
-                file.write_all(content.as_bytes());
+                let _ = file.write_all(content.as_bytes());
             },
             None =>
             {
@@ -117,7 +117,7 @@ impl FileIO {
                     .append(true)
                     .open(&self.file_path)?;
         
-                file.write_all(content.as_bytes())?;
+                let _ = file.write_all(content.as_bytes())?;
             }
         }
         Ok(())
@@ -128,7 +128,7 @@ impl FileIO {
         let mut is_opened = false;
         match self.file
         {
-            Some( ref mut file ) =>
+            Some(_) =>
             {
                 self.close_file();
                 is_opened = true;
@@ -137,7 +137,7 @@ impl FileIO {
             {
             }
         }
-        let mut file = OpenOptions::new()
+        let file = OpenOptions::new()
         .write(true)
         .create(true)
         .truncate(true)
@@ -147,7 +147,7 @@ impl FileIO {
         {
             Ok( mut new_file ) =>
             {
-                new_file.write_all(content.as_bytes());
+                let _ = new_file.write_all(content.as_bytes());
                 if true == is_opened
                 {
                     self.file = Some( new_file );
@@ -166,7 +166,7 @@ impl FileIO {
         let mut file = File::open(&self.file_path)?;
         let mut content = String::new();
 
-        file.seek(self.seek_position)?;
+        let  _ = file.seek(self.seek_position)?;
 
         file.read_to_string(&mut content)?;
 
@@ -208,7 +208,7 @@ impl FileIO {
                     return '\0';
                 }
             },
-            Error => 
+            _ => 
             {
                 self.last_char = '\0';
                 return '\0';
@@ -220,14 +220,14 @@ impl FileIO {
 
     pub fn read_bytes(&mut self, size: usize) -> String
     {
-        let mut file_result = File::open(&self.file_path);
+        let file_result = File::open(&self.file_path);
         let mut content = String::new();
         match file_result
         {
             Ok(mut file)=>
             {
 
-                file.seek(self.seek_position);
+                let _ = file.seek(self.seek_position);
                 for _ in 0..size
                 {
                     let ch = self.p_read_byte( &mut file );
@@ -237,10 +237,10 @@ impl FileIO {
                 match position_result
                 {
                     Ok(position)=>self.seek_position = std::io::SeekFrom::Start(position),
-                    Error=>{},
+                    _=>{},
                 }
             },
-            Error=> {},
+            _ => {},
         }
         content        
     }
@@ -251,14 +251,14 @@ impl FileIO {
     }
     pub fn read_till_delimeters( &mut self, delimiters: String ) -> String
     {
-        let mut file_result = File::open(&self.file_path);
+        let file_result = File::open(&self.file_path);
         let mut content = String::new();
         match file_result
         {
             Ok(mut file)=>
             {
 
-                file.seek(self.seek_position);
+                let _ = file.seek(self.seek_position);
                 let mut detect = false;
                 loop
                 {
@@ -281,24 +281,24 @@ impl FileIO {
                 match position_result
                 {
                     Ok(position)=>self.seek_position = std::io::SeekFrom::Start(position),
-                    Error=>{},
+                    _ =>{},
                 }
             },
-            Error=> {},
+            _ => {},
         }
         content
     }
 
     pub fn is_end_of_file( &mut self ) -> bool
     {
-        let mut file_result = File::open(&self.file_path);
+        let file_result = File::open(&self.file_path);
         match file_result
         {
             Ok(mut file)=> {
-                file.seek(self.seek_position);
+                let _ = file.seek(self.seek_position);
                 '\0' == self.p_read_byte( &mut file )
             },
-            Error=> true,
+            _=> true,
         }
         
     }

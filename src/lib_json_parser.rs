@@ -1,4 +1,4 @@
-use crate::{AppConfig,module_id,util,FileIO,DateTime, DataBuffer};
+use crate::FileIO;
 use std::collections::HashMap;
 
 pub enum JsonType{
@@ -28,7 +28,7 @@ impl JsonParser
 
     pub fn create_json( &mut self )
     {
-        self.file.write_to_new_file("{{}}");
+        let _ = self.file.write_to_new_file("{{}}");
     }
     
     pub fn is_exist( &mut self ) -> bool
@@ -67,11 +67,11 @@ impl JsonParser
 
     fn p_get_next_value( &mut self ) -> JsonType
     {
-        let mut result: JsonType;
+        let result: JsonType;
         if self.is_exist()
         {
             let origin = self.file.read_till_delimeters( String::from( ",][}{" ) );
-            let mut text = origin.trim();
+            let text = origin.trim();
             let mut last_char = self.file.get_last_char();
             if '{' == last_char
             {
@@ -80,7 +80,6 @@ impl JsonParser
                 while '}' != last_char
                 {
                     let (key,val) = self.p_get_next_data();
-                    last_char = self.file.get_last_char();
                     if false == key.is_empty()
                     {
                         obj.insert( key,val );
@@ -105,7 +104,7 @@ impl JsonParser
                     
                     match val
                     {
-                        JsonType::Null(i) => continue,
+                        JsonType::Null(_) => continue,
                         _=> arr.push(val),
                     }
                 }
@@ -194,7 +193,7 @@ impl JsonParser
                     }
                     else
                     {
-                        data = data + &format!("\"{}\":{}", key, JsonParser::static_JsonType_to_string( &val ) );
+                        data = data + &format!("\"{}\":{}", key, JsonParser::static_jsontype_to_string( &val ) );
                     }
                 }
             }
@@ -214,7 +213,7 @@ impl JsonParser
         {
             data = format!("{{\"{}\":{}}}", input_key, input_data );
         }
-        self.file.write_to_new_file( &data );
+        let _ = self.file.write_to_new_file( &data );
     }
 
     pub fn get_data( &mut self, find_key: String ) -> JsonType
@@ -229,7 +228,6 @@ impl JsonParser
             loop
             {
                 let key= self.p_get_next_key();
-                
                 if 0 == key.len()
                 {
                     break;
@@ -257,22 +255,22 @@ impl JsonParser
             {
                 JsonType::Object(_) => 
                 {
-                    let text = JsonParser::static_JsonType_to_string( value );
-                    self.file.write_to_new_file( &JsonParser::static_JsonType_to_string( value ) )
+                    let _ = JsonParser::static_jsontype_to_string( value );
+                    let _ = self.file.write_to_new_file( &JsonParser::static_jsontype_to_string( value ) );
                 },
-                _ =>Ok(
-                {
-                    self.p_set_data( String::from("root"), JsonParser::static_JsonType_to_string( value ) );
-                }),
+                _ => {
+                    self.p_set_data( String::new(), JsonParser::static_jsontype_to_string( value ) ); // Save as root
+                }
+                
             };
         }
         else
         {
-            self.p_set_data( key, JsonParser::static_JsonType_to_string( value ) );
+            self.p_set_data( key, JsonParser::static_jsontype_to_string( value ) );
         }
     }
     
-    pub fn static_JsonType_to_string( input: &JsonType ) -> String
+    pub fn static_jsontype_to_string( input: &JsonType ) -> String
     {
         let mut data = String::new();
 
@@ -294,46 +292,102 @@ impl JsonParser
             },
             JsonType::Object(val) =>
             {
-                let mut isFirst = true;
+                let mut is_first = true;
 
                 data.push_str( "{" );
                 for (key,item) in val
                 {
-                    if false == isFirst
+                    if false == is_first
                     {
                         data.push_str( "," );
                     }
                     else
                     {
-                        isFirst = false;
+                        is_first = false;
                     }
 
-                    data.push_str( &format!("\"{}\":{}", key, JsonParser::static_JsonType_to_string( item ) ) );
+                    data.push_str( &format!("\"{}\":{}", key, JsonParser::static_jsontype_to_string( item ) ) );
                 }
                 data.push_str( "}" );
             }
             JsonType::Array(val) =>
             {
-                let mut isFirst = true;
+                let mut is_first = true;
 
                 data.push_str( "[" );
                 for item in val
                 {
-                    if false == isFirst
+                    if false == is_first
                     {
                         data.push_str( "," );
                     }
                     else
                     {
-                        isFirst = false;
+                        is_first = false;
                     }
 
-                    data.push_str( &JsonParser::static_JsonType_to_string( &item ) );
+                    data.push_str( &JsonParser::static_jsontype_to_string( &item ) );
                 }
                 data.push_str( "]" );
             },
-            JsonType::Null(val) => data = String::new(),
+            JsonType::Null(_) => data = String::new(),
         }
         return data;
+    }
+
+    pub fn delete_data( &mut self, delete_key: String ) -> bool
+    {
+        if true == delete_key.is_empty()
+        {
+            self.create_json();
+            true
+        }
+        else
+        {
+            self.p_delete_data( delete_key )
+        }
+    }
+
+    fn p_delete_data( &mut self, delete_key: String ) -> bool
+    {
+        let mut data = String::from( "{" );
+        let mut is_delete_success = false;
+        if self.is_exist()
+        {
+            let mut is_first = true;
+            self.file.reset_read_index();
+            self.file.open_file();
+            loop
+            {
+                let (key, val) = self.p_get_next_data();
+                if 0 == key.len()
+                {
+                    break;
+                }
+                else
+                {
+                    if delete_key == key
+                    {
+                        is_delete_success = true;
+                    }
+                    else
+                    {
+                        if false == is_first
+                        {
+                            data.push_str(",");
+                        }
+                        else
+                        {
+                            is_first = false;
+                        }
+                        data = data + &format!("\"{}\":{}", key, JsonParser::static_jsontype_to_string( &val ) );
+                    }
+                }
+            }
+            data.push_str("}");
+            self.file.close_file();
+        }
+        let _ = self.file.write_to_new_file( &data );
+        return is_delete_success;
     }
 }

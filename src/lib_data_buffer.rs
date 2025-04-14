@@ -3,26 +3,22 @@ use byteorder::{ByteOrder, BigEndian};
 //use crate::lib_app_config::AppConfig;
 
 #[derive(Clone)]
-pub struct DataBuffer
-{
+pub struct DataBuffer {
     pub data_vec: Vec<u8>,
     pub index: usize
 }
 
 impl DataBuffer
 {
-    pub fn new() -> Self
-    {
+    pub fn new() -> Self {
         DataBuffer{ data_vec: Vec::new(), index: 0 }
     }
 
-    pub fn set_u8( &mut self,input: u8 )
-    {
+    pub fn set_u8( &mut self,input: u8 ) {
         self.data_vec.push( input );
     }
 
-    pub fn get_u8( &mut self ) -> u8
-    {
+    pub fn get_u8( &mut self ) -> u8 {
         let mut result: u8 = 0;
         let size = self.data_vec.len();
 
@@ -35,13 +31,11 @@ impl DataBuffer
         result
     }
     
-    pub fn set_i8( &mut self,input: i8 )
-    {
+    pub fn set_i8( &mut self,input: i8 ) {
         self.data_vec.push( input as u8 );
     }
 
-    pub fn get_i8( &mut self ) -> i8
-    {
+    pub fn get_i8( &mut self ) -> i8 {
         let mut result: i8 = 0;
         let size = self.data_vec.len();
 
@@ -52,17 +46,15 @@ impl DataBuffer
         }
         
         result
-    }    
+    }
 
-    pub fn set_u16( &mut self,input: u16 )
-    {
+    pub fn set_u16( &mut self,input: u16 ) {
 
         self.data_vec.push( ( ( input & 0xff00 ) >> 8 ) as u8 );
         self.data_vec.push( ( input & 0x00ff ) as u8 );
     }
 
-    pub fn get_u16( &mut self ) -> u16
-    {
+    pub fn get_u16( &mut self ) -> u16 {
         let mut result: u16 = 0;
         let size = self.data_vec.len();
 
@@ -76,15 +68,13 @@ impl DataBuffer
         result
     }
     
-    pub fn set_i16( &mut self,input: i16 )
-    {
+    pub fn set_i16( &mut self,input: i16 ) {
 
         self.data_vec.push( ( ( ( input as u16 ) & 0xff00 ) >> 8 ) as u8 );
         self.data_vec.push( ( input & 0x00ff ) as u8 );
     }
 
-    pub fn get_i16( &mut self ) -> i16
-    {
+    pub fn get_i16( &mut self ) -> i16 {
         let mut result: i16 = 0;
         let size = self.data_vec.len();
 
@@ -98,16 +88,14 @@ impl DataBuffer
         result
     }
 
-    pub fn set_i32( &mut self,input: i32 )
-    {
+    pub fn set_i32( &mut self,input: i32 ) {
         self.data_vec.push( ( ( ( input as u32 ) & 0xff000000 ) >> 24 ) as u8 );
         self.data_vec.push( ( ( input & 0x00ff0000 ) >> 16 ) as u8 );
         self.data_vec.push( ( ( input & 0x0000ff00 ) >> 8 ) as u8 );
         self.data_vec.push( ( input & 0x000000ff ) as u8 );
     }
 
-    pub fn get_i32( &mut self ) -> i32
-    {
+    pub fn get_i32( &mut self ) -> i32 {
         let mut result: i32 = 0;
         let size = self.data_vec.len();
 
@@ -123,17 +111,39 @@ impl DataBuffer
         result
     }
 
+    pub fn set_i64( &mut self,input: i64 ) {
+        self.set_i32( ( ( input & 0xffffffff00000000u64 as i64 ) >> 32 ) as i32 );
+        self.set_i32( ( input & 0x00000000ffffffffu64 as i64 ) as i32 );
+    }
+
+    pub fn get_i64( &mut self ) -> i64 {
+        let mut result: i64 = 0;
+        let size = self.data_vec.len();
+
+        if ( self.index + 7 ) < size
+        {
+            result |= ( self.data_vec[self.index] as i64 ) << 56 ;
+            result |= ( self.data_vec[self.index] as i64 ) << 48 ;
+            result |= ( self.data_vec[self.index] as i64 ) << 40 ;
+            result |= ( self.data_vec[self.index] as i64 ) << 32 ;
+            result |= ( self.data_vec[self.index] as i64 ) << 24 ;
+            result |= ( self.data_vec[self.index + 1] as i64 ) << 16;
+            result |= ( self.data_vec[self.index + 2] as i64 ) << 8 ;
+            result |= self.data_vec[self.index + 3] as i64;
+            self.index += 8;
+        }
+        
+        result
+    }
     
-    pub fn set_u32( &mut self,input: u32 )
-    {
+    pub fn set_u32( &mut self,input: u32 ) {
         self.data_vec.push( ( ( input & 0xff000000 ) >> 24 ) as u8 );
         self.data_vec.push( ( ( input & 0x00ff0000 ) >> 16 ) as u8 );
         self.data_vec.push( ( ( input & 0x0000ff00 ) >> 8 ) as u8 );
         self.data_vec.push( ( input & 0x000000ff ) as u8 );
     }
 
-    pub fn get_u32( &mut self ) -> u32
-    {
+    pub fn get_u32( &mut self ) -> u32 {
         let mut result: u32 = 0;
         let size = self.data_vec.len();
 
@@ -149,14 +159,12 @@ impl DataBuffer
         result
     }
     
-    pub fn set_u64( &mut self,input: u64 )
-    {
+    pub fn set_u64( &mut self,input: u64 ) {
         self.set_u32( ( ( input & 0xffffffff00000000 ) >> 32 ) as u32 );
         self.set_u32( ( input & 0x00000000ffffffff ) as u32 );
     }
 
-    pub fn get_u64( &mut self ) -> u64
-    {
+    pub fn get_u64( &mut self ) -> u64 {
         let mut result: u64 = 0;
         let size = self.data_vec.len();
 
@@ -176,8 +184,7 @@ impl DataBuffer
         result
     }
 
-    pub fn set_f32( &mut self, input: f32 )
-    {
+    pub fn set_f32( &mut self, input: f32 ) {
         let mut bytes =  [0 as u8; 4];
         BigEndian::write_f32( &mut bytes, input );
 
@@ -187,8 +194,7 @@ impl DataBuffer
         }
     }
 
-    pub fn get_f32( &mut self ) -> f32
-    {
+    pub fn get_f32( &mut self ) -> f32 {
         let mut bytes = [0 as u8; 4];
         for idx in 0..4
         {
@@ -198,8 +204,7 @@ impl DataBuffer
         BigEndian::read_f32( &mut bytes )
     }
 
-    pub fn set_f64( &mut self, input: f64 )
-    {
+    pub fn set_f64( &mut self, input: f64 ) {
         let mut bytes =  [0 as u8; 8];
         BigEndian::write_f64( &mut bytes, input );
 
@@ -209,8 +214,7 @@ impl DataBuffer
         }
     }
 
-    pub fn get_f64( &mut self ) -> f64
-    {
+    pub fn get_f64( &mut self ) -> f64 {
         let mut bytes = [0 as u8; 8];
         for idx in 0..8
         {
@@ -220,13 +224,11 @@ impl DataBuffer
         BigEndian::read_f64( &mut bytes )
     }
 
-    pub fn set_char( &mut self, input :char )
-    {
+    pub fn set_char( &mut self, input :char ) {
         self.data_vec.push( input as u8 );
     }
 
-    pub fn get_char( &mut self ) -> char
-    {
+    pub fn get_char( &mut self ) -> char {
         let mut result: char = '\0';
         let size = self.data_vec.len();
 
@@ -239,8 +241,7 @@ impl DataBuffer
         result
     }
 
-    pub fn set_string( &mut self, input: String )
-    {
+    pub fn set_string( &mut self, input: String ) {
         let input_chars:Vec<char> = input.chars().collect();
         let input_len = input_chars.len();
 
@@ -252,8 +253,7 @@ impl DataBuffer
         self.set_char( '\0' );
     }
 
-    pub fn get_string( &mut self ) -> String
-    {
+    pub fn get_string( &mut self ) -> String {
         let mut result = String::new();
 
         loop
@@ -269,8 +269,7 @@ impl DataBuffer
         result
     }
 
-    pub fn set_bool( &mut self, input: bool )
-    {
+    pub fn set_bool( &mut self, input: bool ) {
         if true == input
         {
             self.set_u8( 1 );
@@ -281,8 +280,7 @@ impl DataBuffer
         }
     }
 
-    pub fn get_bool( &mut self ) -> bool
-    {
+    pub fn get_bool( &mut self ) -> bool {
         let result = self.get_u8();
         if 0 < result
         {
@@ -294,19 +292,16 @@ impl DataBuffer
         }
     }
 
-    pub fn set_str( &mut self, input : &str )
-    {
+    pub fn set_str( &mut self, input : &str ) {
         self.set_string( String::from( input ) );
     }
 
-    pub fn clear_buffer( &mut self )
-    {
+    pub fn clear_buffer( &mut self ) {
         self.data_vec.clear();
         self.index = 0;
     }
 
-    pub fn set_buffer( &mut self, input: &mut DataBuffer )
-    {
+    pub fn set_buffer( &mut self, input: &mut DataBuffer ) {
         let backup = input.index;
 
         input.reset_index();
@@ -318,38 +313,31 @@ impl DataBuffer
         input.index = backup;
     }
 
-    pub fn reset_index( &mut self )
-    {
+    pub fn reset_index( &mut self ) {
         self.index = 0;
     }
 
-    pub fn get_index( &mut self ) -> usize
-    {
+    pub fn get_index( &mut self ) -> usize {
         self.index
     }
 
-    pub fn is_empty( &mut self ) -> bool
-    {
+    pub fn is_empty( &mut self ) -> bool {
         self.data_vec.is_empty()
     }
 
-    pub fn is_no_data( &mut self ) -> bool
-    {
+    pub fn is_no_data( &mut self ) -> bool {
         self.data_vec.len() <= self.index
     }
 
-    pub fn get_size( &mut self ) -> usize
-    {
+    pub fn get_size( &mut self ) -> usize {
         self.data_vec.len()
     }
 
-    pub fn get_buffer_vec( self ) -> Vec<u8>
-    {
-        self.data_vec
+    pub fn get_buffer_vec( &mut self ) -> Vec<u8> {
+        self.data_vec.clone()
     }
 
-    pub fn set_buffer_vec( &mut self, data : Vec<u8> )
-    {
+    pub fn set_buffer_vec( &mut self, data : Vec<u8> ) {
         self.data_vec = data;
     }
 }
